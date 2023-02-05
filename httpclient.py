@@ -22,7 +22,8 @@ import sys
 import socket
 import re
 # you may use urllib to encode data appropriately
-import urllib.parse
+import urllib.parse as parse
+from headerparse import *
 
 def help():
     print("httpclient.py [GET/POST] [URL]\n")
