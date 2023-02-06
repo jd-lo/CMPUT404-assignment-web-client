@@ -5,7 +5,7 @@ mapping = {
     'Accept': 'text/html, application/xhtml+xml, application/xml, text/html',
     'Accept-Language': 'en, en-CA, en-US',
     'Connection': 'close',
-    'User-agent': "Jonathan's cURL Copycat/1.0",
+    'User-Agent': "Jonathan's cURL Copycat/1.0",
     'Accept-Encoding': 'gzip',
     'Upgrade-Insecure-Requests': '0',                                           #No TLS allowed :>
 }
