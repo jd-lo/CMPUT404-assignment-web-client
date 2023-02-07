@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 #Strictly for client-implementation
 class R:
-    '''parent class for Request and Response'''
+    '''Parent class for Request and Response'''
 
     @classmethod
     def from_bytes(cls, data: bytes, charset: str):
@@ -42,16 +42,7 @@ class R:
             return None
 
     def __str__(self):
-        r_content = ""
-        for field, value in self.headers.items():
-            r_content += f'{field}: {value}\r\n'
-        #Headers delimiter
-        r_content += '\r\n'
-        
-        if self.body:
-            r_content += self.body
-
-        return r_content
+        pass
 
 class Request(R):
     def __init__(self, headers = {}, body = ''):
@@ -89,10 +80,10 @@ class Request(R):
         
         #Compose initial headers based on URL
         headers.update(
-            IntlReqHeader(method, url.path, url.scheme).to_dict(),
+            IntlReqHeader(method, url.path, mapping['Scheme']).to_dict(),
         )
         headers.update(
-            StdHeader('Host', url.hostname).to_dict(),
+            StdHeader('Host', url.netloc).to_dict(),
         )
         #While GET requests shoudn't have a body, they are not forbidden, so include them.
         if body:
@@ -114,6 +105,27 @@ class Request(R):
                 )
         return headers
 
+    def __str__(self):
+        req_content = ""
+
+        #These need to go into their own line otherwise bad request
+        special_fields = ["Method", "Path", "Scheme"]
+        for i, field in enumerate(special_fields):
+            req_content += f'{self.headers.get(field)}'
+            delimiter = ' ' if i != 2 else '\r\n'
+            req_content += delimiter
+
+        for field, value in self.headers.items():
+            if field not in special_fields:
+                req_content += f'{field}: {value}\r\n'
+        #Headers delimiter
+        req_content += '\r\n'
+        
+        if self.body:
+            req_content += self.body
+
+        return req_content
+
 class Response(R):
     def __init__(self, headers, body):
         self.headers = headers
@@ -132,6 +144,27 @@ class Response(R):
             headers.update(header_obj.to_dict())
         
         return Request(headers, body)
+
+    def __str__(self):
+        req_content = ""
+
+        #These need to go into their own line otherwise bad request
+        special_fields = ["Scheme", "Code", "Message"]
+        for i, field in enumerate(special_fields):
+            req_content += f'{self.headers.get(field)}'
+            delimiter = ' ' if i != 2 else '\r\n'
+            req_content += delimiter
+
+        for field, value in self.headers.items():
+            if field not in special_fields:
+                req_content += f'{field}: {value}\r\n'
+        #Headers delimiter
+        req_content += '\r\n'
+        
+        if self.body:
+            req_content += self.body
+
+        return req_content
 
 class Header(ABC):
     @classmethod
@@ -172,18 +205,19 @@ class IntlReqHeader(Header):
         return {'Method': self.method, 'Path': self.path, 'Scheme': self.scheme}
 
 class IntlResHeader(Header):
-    def __init__(self, code, message):
+    def __init__(self, scheme, code, message):
+        self.scheme = scheme
         self.code = code
         self.message = message
 
     @classmethod
     def from_string(cls, data: str):
         #Handle code messages with spaces (e.g "I'm a teapot")
-        split_header = data.split(' ', maxsplit = 1)
-        return cls(split_header[0], split_header[1])
+        split_header = data.split(' ', maxsplit = 2)
+        return cls(split_header[0], split_header[1], split_header[2])
 
     def to_dict(self):
-        return {'Code': self.code, 'Message': self.message}
+        return {'Scheme': self.scheme, 'Code': self.code, 'Message': self.message}
 
 #Pseudo-unit testing
 if __name__ == '__main__':
@@ -194,7 +228,7 @@ if __name__ == '__main__':
     assert r.get("User-Agent") == "Jonathan's cURL Copycat/1.0"
 
     #Test case-sensitivity
-    r = Request.from_args("pOsT", "Bananas", "bananananas")
+    r = Request.from_args("pOsT", "http://127.0.0.1:8080", "bananananas")
     assert r.get("Method") == 'POST'
 
     #From a string
@@ -216,10 +250,10 @@ if __name__ == '__main__':
     assert r.get("Content-Length") is None
 
     #Responses
-    r = Response.from_str('200 OK\r\nHost: Who knows lol\r\n\r\nHey Pal')
+    r = Response.from_str('HTTP/1.1 200 OK\r\nHost: Who knows lol\r\n\r\nHey Pal')
     assert r.get('Code') == '200'
 
-    r = Response.from_bytes(b'403 Forbidden\r\nHost: Who knows lol\r\n\r\n', 'utf-8')
+    r = Response.from_bytes(b'HTTP/1.1 403 Forbidden\r\nHost: Who knows lol\r\n\r\n', 'utf-8')
     assert r.get('Code') == '403' and r.get('Message') == 'Forbidden'
 
     #A real response

@@ -26,32 +26,49 @@ import urllib.parse as parse
 from headerparse import *
 
 def help():
-    print("httpclient.py [GET/POST] [URL]\n")
+    print('''
+    httpclient.py [GET/POST] [URL] [BODY(Optional)]\n"
+    
+    BODY is a string
+    e.g) "... field1=value1&field2=value2" is valid, but
+         "... field=value1 field=value2" is not.
 
-class HTTPResponse(object):
-    def __init__(self, code=200, body=""):
-        self.code = code
+    It is possible (but not recommended by HTTP conventions) to post with no body and get with a body.
+    ''')
+
+class HTTPResponse(Response):
+    def __init__(self, headers, body):
         self.body = body
+        self.headers = headers
+        self.code = int(self.get('Code'))
 
 class HTTPClient(object):
-    #def get_host_port(self,url):
+    def get_host_port(self, url: str):
+        '''Returns a host, pair tuple'''
+        split_url = url.split(':')
+        host = split_url[0]
+        try:
+            port = int(split_url[1])
+        except IndexError:
+            port = 80 #Default per HTTP spec.
+        return (host, port)
 
     def connect(self, host, port):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((host, port))
-        return None
-
-    def get_code(self, data):
-        return None
-
-    def get_headers(self,data):
-        return None
-
-    def get_body(self, data):
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((host, port))
+        except:
+            print(f'Connection to {host}:{port} could not be made.')
+            self.close()
+            sys.exit(1)
         return None
     
+    def getbody(arg):
+        pass
+
     def sendall(self, data):
-        self.socket.sendall(data.encode('utf-8'))
+        item = data.encode('utf-8')
+        self.socket.sendall(item)
         
     def close(self):
         self.socket.close()
@@ -66,31 +83,66 @@ class HTTPClient(object):
                 buffer.extend(part)
             else:
                 done = not part
-        return buffer.decode('utf-8')
+        #Handles gzip data
+        return buffer.decode('ISO-8859–1')
 
-    def GET(self, url, args=None):
+    def communicate_r(self, host, port, data: Request) -> HTTPResponse:
+        '''Opens and requests on a socket, returns the response and closes socket.'''
+        
+        self.connect(host, port)
+        self.sendall(str(data))
+        response = HTTPResponse.from_str(self.recvall(self.socket))
+        self.close()
+        return response
+
+    def GET(self, url: str, body: str) -> HTTPResponse:
         code = 500
         body = ""
-        return HTTPResponse(code, body)
 
-    def POST(self, url, args=None):
+        request = Request.from_args("Get", url, body)
+        host, port = self.get_host_port(request.get("Host"))
+        response = self.communicate_r(host, port, request)
+
+        return response
+
+    def POST(self, url: str, body: str) -> HTTPResponse:
         code = 500
         body = ""
-        return HTTPResponse(code, body)
+        
+        request = Request.from_args("POST", url, body)
+        host, port = self.get_host_port(request.get("Host"))
+        response = self.communicate_r(host, port, request)
 
-    def command(self, url, command="GET", args=None):
+        return response
+
+    def command(self, command: str, url: str, body: str):
         if (command == "POST"):
-            return self.POST( url, args )
+            return self.POST(url, body)
         else:
-            return self.GET( url, args )
+            return self.GET(url, body)
     
 if __name__ == "__main__":
     client = HTTPClient()
-    command = "GET"
-    if (len(sys.argv) <= 1):
+    #Expected input: name.py [Method] [URL] [Body]
+    #clargs = sys.argv
+
+    clargs = ['httpclient.py', 'GET', 'http://www.google.com/']
+
+    try:
+        #Don't count name.py as argument to not confuse user.
+        if len(clargs) == 3:
+            method, url = clargs[1:]
+            body = ''
+        elif len(clargs == 4):
+            method, url, body = clargs[1:]
+        else:
+            raise Exception("Incorrect amount of arguments. Expected: 2 or 3")
+
+        assert method.upper() in ("GET", "POST"), "Method must be either GET or POST"
+        response = client.command(method, url, body)
+        print(response)
+
+    except Exception as e:
+        print(e)
         help()
         sys.exit(1)
-    elif (len(sys.argv) == 3):
-        print(client.command( sys.argv[2], sys.argv[1] ))
-    else:
-        print(client.command( sys.argv[1] ))

@@ -1,0 +1,14 @@
+418 I'm a teapot
+content-type: text/html; charset=UTF-8
+strict-transport-security: max-age=31536000
+content-security-policy: object-src 'none';base-uri 'self';script-src 'nonce-w9sy8YKY7ejXvsz8ppSBLA' 'strict-dynamic' 'report-sample' 'unsafe-eval' 'unsafe-inline' https: http:;report-uri https://csp.withgoogle.com/csp/gws/fff
+cross-origin-opener-policy-report-only: same-origin-allow-popups; report-to="gws"
+report-to: {"group":"gws","max_age":2592000,"endpoints":[{"url":"https://csp.withgoogle.com/csp/report-to/gws/fff"}]}
+content-encoding: br
+date: Mon, 06 Feb 2023 22:04:42 GMT
+server: gws
+x-xss-protection: 0
+x-frame-options: SAMEORIGIN
+alt-svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+
+<!doctype html><html lang="en"> <script nonce="0LGR4n4gA31USyWc-CkMDw">(function(H){H.className=H.className.replace(/\bgoogle\b/,'google-js')})(document.documentElement)</script> <meta charset="utf-8"> <meta content="initial-scale=1, minimum-scale=1, width=device-width" name="viewport"> <title>Error 418 (I’m a teapot)!?</title> <link href="//www.gstatic.com/teapot/teapot.min.css" rel="stylesheet" nonce="0LGR4n4gA31USyWc-CkMDw"> <a href="https://www.google.com/"><span aria-label="Google" id="logo"></span></a> <p><b>418.</b> <ins>I’m a teapot.</ins></p> <p>The requested entity body is short and stout. <ins>Tip me over and pour me out.</ins></p> <div id="teaset"><div id="teabot"></div><div id="teacup"></div></div> <script src="//www.gstatic.com/teapot/teapot.min.js" nonce="0LGR4n4gA31USyWc-CkMDw"></script> </html>
