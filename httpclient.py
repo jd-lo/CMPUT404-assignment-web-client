@@ -42,7 +42,7 @@ def help():
 
 class HTTPResponse(Response):
     def __init__(self, headers, body):
-        super().__init__()
+        super().__init__(headers, body)
         self.code = int(self.get('Code'))
 
 class HTTPClient(object):

@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
 from config import mapping
 from abc import ABC, abstractmethod
+from email.utils import formatdate
 
 #Strictly for client-implementation
 class R:
@@ -79,18 +80,24 @@ class Request(R):
         url = urlparse(url)
         
         #Compose initial headers based on URL
+        path = url.path if url.path != '' else '/'
         headers.update(
-            IntlReqHeader(method, url.path, mapping['Scheme']).to_dict(),
+            IntlReqHeader(method, path, mapping['Scheme']).to_dict(),
         )
         headers.update(
             StdHeader('Host', url.netloc).to_dict(),
         )
-        #While GET requests shoudn't have a body, they are not forbidden, so include them.
-        if body:
-            body_length = str(len(body))
-            headers.update(
-                StdHeader('Content-Length', body_length).to_dict()
-            )
+
+        date_value = f'{formatdate(timeval = None, localtime = False, usegmt = False)}'
+        headers.update(
+            StdHeader('Date', date_value).to_dict(),
+        )
+
+        #According to unit tests, even empty POSTs have a content length header.
+        body_length = str(len(body))
+        headers.update(
+            StdHeader('Content-Length', body_length).to_dict()
+        )
 
         if method.upper() == 'POST':
             headers.update(
@@ -143,7 +150,7 @@ class Response(R):
             header_obj = StdHeader.from_string(header)
             headers.update(header_obj.to_dict())
         
-        return Response(headers, body)
+        return cls(headers, body)
 
     def __str__(self):
         res_content = ""
