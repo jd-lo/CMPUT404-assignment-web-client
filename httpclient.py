@@ -27,9 +27,13 @@ from headerparse import *
 
 def help():
     print('''
-    httpclient.py [GET/POST] [URL] [BODY(Optional)]\n"
+    httpclient.py [GET/POST] [URL] [BODY(Optional)]
     
-    BODY is a string
+    BODY is a string, and URL is a proper url following an HTTP 1.1 scheme
+
+    e.g) "... http://www.mysitehere.co.nz/ ..." is valid, but
+         "... www.mysitehere.co.nz/" is not.
+
     e.g) "... field1=value1&field2=value2" is valid, but
          "... field=value1 field=value2" is not.
 
@@ -38,8 +42,7 @@ def help():
 
 class HTTPResponse(Response):
     def __init__(self, headers, body):
-        self.body = body
-        self.headers = headers
+        super().__init__()
         self.code = int(self.get('Code'))
 
 class HTTPClient(object):
@@ -74,41 +77,35 @@ class HTTPClient(object):
         self.socket.close()
 
     # read everything from the socket
-    def recvall(self, sock):
+    def recvall(self):
         buffer = bytearray()
         done = False
         while not done:
-            part = sock.recv(1024)
+            part = self.socket.recv(1024)
             if (part):
                 buffer.extend(part)
             else:
                 done = not part
-        #Handles gzip data
-        return buffer.decode('ISO-8859–1')
+        #Some bytes (i.e continuation, gzip) cannot be read with utf-8
+        return buffer.decode('ISO-8859-1')
 
     def communicate_r(self, host, port, data: Request) -> HTTPResponse:
         '''Opens and requests on a socket, returns the response and closes socket.'''
         
         self.connect(host, port)
         self.sendall(str(data))
-        response = HTTPResponse.from_str(self.recvall(self.socket))
+        response = HTTPResponse.from_str(self.recvall())
         self.close()
         return response
 
-    def GET(self, url: str, body: str) -> HTTPResponse:
-        code = 500
-        body = ""
-
+    def GET(self, url: str, body = '') -> HTTPResponse:
         request = Request.from_args("Get", url, body)
         host, port = self.get_host_port(request.get("Host"))
         response = self.communicate_r(host, port, request)
 
         return response
 
-    def POST(self, url: str, body: str) -> HTTPResponse:
-        code = 500
-        body = ""
-        
+    def POST(self, url: str, body = '') -> HTTPResponse:
         request = Request.from_args("POST", url, body)
         host, port = self.get_host_port(request.get("Host"))
         response = self.communicate_r(host, port, request)

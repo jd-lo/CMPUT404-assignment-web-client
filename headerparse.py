@@ -68,7 +68,7 @@ class Request(R):
             header_obj = StdHeader.from_string(header)
             headers.update(header_obj.to_dict())
         
-        return Request(headers, body)
+        return cls(headers, body)
 
     @classmethod
     def _set_headers(self, method, url, body):
@@ -143,28 +143,28 @@ class Response(R):
             header_obj = StdHeader.from_string(header)
             headers.update(header_obj.to_dict())
         
-        return Request(headers, body)
+        return Response(headers, body)
 
     def __str__(self):
-        req_content = ""
+        res_content = ""
 
         #These need to go into their own line otherwise bad request
         special_fields = ["Scheme", "Code", "Message"]
         for i, field in enumerate(special_fields):
-            req_content += f'{self.headers.get(field)}'
+            res_content += f'{self.headers.get(field)}'
             delimiter = ' ' if i != 2 else '\r\n'
-            req_content += delimiter
+            res_content += delimiter
 
         for field, value in self.headers.items():
             if field not in special_fields:
-                req_content += f'{field}: {value}\r\n'
+                res_content += f'{field}: {value}\r\n'
         #Headers delimiter
-        req_content += '\r\n'
+        res_content += '\r\n'
         
         if self.body:
-            req_content += self.body
+            res_content += self.body
 
-        return req_content
+        return res_content
 
 class Header(ABC):
     @classmethod

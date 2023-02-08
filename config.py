@@ -6,7 +6,7 @@ mapping = {
     'Accept-Language': 'en, en-CA, en-US',
     'Connection': 'close',
     'User-Agent': "Jonathan's cURL Copycat/1.0",
-    'Accept-Encoding': 'gzip',
+    'Accept-Encoding': 'identity',
     'Upgrade-Insecure-Requests': '0',                                           #No TLS allowed :>
     'Scheme': 'HTTP/1.1'
 }
