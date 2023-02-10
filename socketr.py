@@ -96,14 +96,12 @@ class Request(R):
         body = url.query
 
         if type(args) is dict:
-            body += '&'
             #Unit tests pass in dict, while CLI passes in a list (or None)
             for i, (key, value) in enumerate(args.items(), start = 1):
                 body += f'{key}={value}'
                 if i < len(args):
                     body += '&'
         elif type(args) is list:
-            body += '&'
             for i, arg in enumerate(args, start = 1):
                 body += arg
                 if i < len(args):
