@@ -94,6 +94,7 @@ class Request(R):
 
         #If there is no query it will be an empty string
         body = url.query
+        body += '&' if body != '' else ''
 
         if type(args) is dict:
             #Unit tests pass in dict, while CLI passes in a list (or None)
