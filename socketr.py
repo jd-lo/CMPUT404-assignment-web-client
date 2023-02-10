@@ -1,8 +1,7 @@
 from urllib.parse import urlparse
 from config import mapping
-from abc import ABC, abstractmethod
+from abc import ABC
 from email.utils import formatdate
-from json import dumps as jsonify
 from headers import *
 
 class R(ABC):

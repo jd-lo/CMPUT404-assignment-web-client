@@ -116,9 +116,7 @@ class HTTPClient(object):
 if __name__ == "__main__":
     client = HTTPClient()
     #Expected input: name.py [Method] [URL] [*args]
-    #clargs = sys.argv
-
-    clargs = ['httpclient.py', 'GET', 'http://www.google.com/']
+    clargs = sys.argv
 
     try:
         #Don't count name.py as argument to not confuse user.
