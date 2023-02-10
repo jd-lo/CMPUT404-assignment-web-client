@@ -23,19 +23,16 @@ import socket
 import re
 # you may use urllib to encode data appropriately
 import urllib.parse as parse
-from headerparse import *
+from socketr import *
 
 def help():
     print('''
-    httpclient.py [GET/POST] [URL] [BODY(Optional)]
+    httpclient.py [GET/POST] [URL] [*Args(Optional)]
     
-    BODY is a string, and URL is a proper url following an HTTP 1.1 scheme
+    Args is a list of values to POST, and URL is a proper url following an HTTP 1.1 scheme
 
     e.g) "... http://www.mysitehere.co.nz/ ..." is valid, but
          "... www.mysitehere.co.nz/" is not.
-
-    e.g) "... field1=value1&field2=value2" is valid, but
-         "... field=value1 field=value2" is not.
 
     It is possible (but not recommended by HTTP conventions) to post with no body and get with a body.
     ''')
@@ -48,6 +45,7 @@ class HTTPResponse(Response):
 class HTTPClient(object):
     def get_host_port(self, url: str):
         '''Returns a host, pair tuple'''
+
         split_url = url.split(':')
         host = split_url[0]
         try:
@@ -65,13 +63,10 @@ class HTTPClient(object):
             self.close()
             sys.exit(1)
         return None
-    
-    def getbody(arg):
-        pass
 
     def sendall(self, data):
-        item = data.encode('utf-8')
-        self.socket.sendall(item)
+        encoded_data = data.encode('utf-8')
+        self.socket.sendall(encoded_data)
         
     def close(self):
         self.socket.close()
@@ -98,29 +93,29 @@ class HTTPClient(object):
         self.close()
         return response
 
-    def GET(self, url: str, body = '') -> HTTPResponse:
-        request = Request.from_args("Get", url, body)
+    def GET(self, url: str, args = None) -> HTTPResponse:
+        request = Request.from_args("Get", url, args)
         host, port = self.get_host_port(request.get("Host"))
         response = self.communicate_r(host, port, request)
 
         return response
 
-    def POST(self, url: str, body = '') -> HTTPResponse:
-        request = Request.from_args("POST", url, body)
+    def POST(self, url: str, args = None) -> HTTPResponse:
+        request = Request.from_args("POST", url, args)
         host, port = self.get_host_port(request.get("Host"))
         response = self.communicate_r(host, port, request)
 
         return response
 
-    def command(self, command: str, url: str, body: str):
+    def command(self, command: str, url: str, args: list):
         if (command == "POST"):
-            return self.POST(url, body)
+            return self.POST(url, args)
         else:
-            return self.GET(url, body)
+            return self.GET(url, args)
     
 if __name__ == "__main__":
     client = HTTPClient()
-    #Expected input: name.py [Method] [URL] [Body]
+    #Expected input: name.py [Method] [URL] [*args]
     #clargs = sys.argv
 
     clargs = ['httpclient.py', 'GET', 'http://www.google.com/']
@@ -129,14 +124,14 @@ if __name__ == "__main__":
         #Don't count name.py as argument to not confuse user.
         if len(clargs) == 3:
             method, url = clargs[1:]
-            body = ''
+            args = None
         elif len(clargs == 4):
-            method, url, body = clargs[1:]
+            method, url, *args = clargs[1:]
         else:
             raise Exception("Incorrect amount of arguments. Expected: 2 or 3")
 
         assert method.upper() in ("GET", "POST"), "Method must be either GET or POST"
-        response = client.command(method, url, body)
+        response = client.command(method, url, args)
         print(response)
 
     except Exception as e:
