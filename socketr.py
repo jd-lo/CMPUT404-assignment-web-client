@@ -82,36 +82,30 @@ class Request(R):
 
         #Break url into elementary components
         url = urlparse(url)
-        body = cls._get_body(method, url, args)
+        body = cls._get_body(url, args)
         headers = cls._get_headers(method, url, body)
 
         return cls(headers, body)
 
     @classmethod
-    def _get_body(cls, method: str, url: tuple, args: object) -> str:
+    def _get_body(cls, url: tuple, args: object) -> str:
         '''Helper method to construct a request body from CLI'''
+        #Format: Query (if any) + Args (if any)
 
-        #match and case keywords not compatible with python 3.6 (min requirements)
-        body = ''
-        #If the user inputs both a query and arguments with GET the arguments are ignored.
-        if method.upper() == 'GET':
-            #If there is no query it will be an empty string
-            body = url.query
-        #POST methods will ignore the query
-        elif method.upper() == 'POST':
-            if type(args) is dict:
-                #Unit tests pass in dict, while CLI passes in a list (or None)
-                for i, (key, value) in enumerate(args.items(), start = 1):
-                    body += f'{key}={value}'
-                    if i < len(args):
-                        body += '&'
-            elif type(args) is list:
-                for i, arg in enumerate(args, start = 1):
-                    body += arg
-                    if i < len(args):
-                        body += '&'
-            elif type(args) is None:
-                body = ''
+        #If there is no query it will be an empty string
+        body = url.query
+
+        if type(args) is dict:
+            #Unit tests pass in dict, while CLI passes in a list (or None)
+            for i, (key, value) in enumerate(args.items(), start = 1):
+                body += f'{key}={value}'
+                if i < len(args):
+                    body += '&'
+        elif type(args) is list:
+            for i, arg in enumerate(args, start = 1):
+                body += arg
+                if i < len(args):
+                    body += '&'
 
         return body
 
